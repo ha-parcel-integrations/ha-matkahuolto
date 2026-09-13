@@ -1,0 +1,148 @@
+{
+  "title": "Matkahuolto",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Ota Matkahuolto käyttöön",
+        "description": "Matkahuolto-seuranta ei tarvitse tiliä eikä postinumeroa — keskus luodaan heti. Lisää paketteja myöhemmin integraation asetuksista tai palvelulla `matkahuolto.track_parcel`."
+      }
+    },
+    "abort": {
+      "already_configured": "Matkahuolto on jo määritetty."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Matkahuollon asetukset",
+        "menu_options": {
+          "parcels": "Paketit",
+          "settings": "Asetukset"
+        },
+        "sections": {
+          "parcels": {
+            "name": "Paketit",
+            "data": {
+              "add": "Lisää paketti",
+              "remove": "Poista paketteja"
+            },
+            "data_description": {
+              "add": "Syötä Matkahuollon seurantakoodi aloittaaksesi paketin seurannan. Löydät sen lähetysvahvistuksesta tai noutokortista."
+            }
+          },
+          "delivered": {
+            "name": "Toimitetut paketit",
+            "data": {
+              "delivered_filter_type": "Suodata",
+              "delivered_filter_amount": "Määrä"
+            },
+            "data_description": {
+              "delivered_filter_type": "Näytä toimitetut paketit viimeisen X päivän ajalta, tai rajaa X viimeisimpään.",
+              "delivered_filter_amount": "Näytettävien päivien tai pakettien määrä."
+            }
+          },
+          "history": {
+            "name": "Pakettihistoria",
+            "data": {
+              "include_history": "Sisällytä statushistoria"
+            },
+            "data_description": {
+              "include_history": "Lisää jokaiselle paketille historia-attribuutin, joka listaa jokaisen statuspäivityksen (aikaleima, status, alkuperäinen teksti). Oletuksena pois päältä."
+            }
+          }
+        }
+      },
+      "parcels": {
+        "title": "Hallitse paketteja",
+        "data": {
+          "tracking_codes": "Seurantakoodit"
+        }
+      },
+      "settings": {
+        "title": "Asetukset",
+        "data": {
+          "delivered_filter_type": "Toimitetut paketit: suodata",
+          "delivered_filter_amount": "Toimitetut paketit: määrä",
+          "include_history": "Sisällytä statushistoria"
+        }
+      }
+    },
+    "error": {
+      "invalid_tracking_code": "Tämä ei näytä Matkahuollon seurantakoodilta.",
+      "already_tracked": "Tätä pakettia seurataan jo."
+    }
+  },
+  "selector": {
+    "delivered_filter_type": {
+      "options": {
+        "days": "Päivää",
+        "parcels": "Pakettien määrä"
+      }
+    }
+  },
+  "services": {
+    "track_parcel": {
+      "name": "Seuraa pakettia",
+      "description": "Aloita paketin seuranta Matkahuollon seurantakoodilla.",
+      "fields": {
+        "tracking_code": {
+          "name": "Seurantakoodi",
+          "description": "Matkahuollon seurantakoodi."
+        }
+      }
+    },
+    "untrack_parcel": {
+      "name": "Lopeta paketin seuranta",
+      "description": "Lopeta paketin seuranta Matkahuollon seurantakoodilla.",
+      "fields": {
+        "tracking_code": {
+          "name": "Seurantakoodi",
+          "description": "Matkahuollon seurantakoodi, jonka seuranta lopetetaan."
+        }
+      }
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "parcel_registered": "Paketti rekisteröitiin",
+      "parcel_status_changed": "Paketin status muuttui",
+      "parcel_delivered": "Paketti toimitettiin",
+      "parcel_delivery_time_changed": "Paketin arvioitu toimitusaika muuttui"
+    }
+  },
+  "entity": {
+    "button": {
+      "refresh": {
+        "name": "Päivitä"
+      }
+    },
+    "calendar": {
+      "deliveries": {
+        "name": "Toimitukset"
+      }
+    },
+    "sensor": {
+      "incoming_parcels": {
+        "name": "Saapuvat paketit",
+        "unit_of_measurement": "pakettia"
+      },
+      "next_delivery": {
+        "name": "Seuraava toimitus"
+      },
+      "awaiting_pickup": {
+        "name": "Noudettavissa",
+        "unit_of_measurement": "pakettia"
+      },
+      "delivered_parcels": {
+        "name": "Toimitetut paketit",
+        "unit_of_measurement": "pakettia"
+      },
+      "last_update": {
+        "name": "Viimeisin onnistunut päivitys"
+      },
+      "parcel": {
+        "name": "Paketti {barcode}"
+      }
+    }
+  }
+}
