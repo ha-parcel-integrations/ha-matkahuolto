@@ -14,6 +14,7 @@ from typing import Any
 import aiohttp
 
 from .const import TRACKING_API_URL
+from .parcels import NEW_ISSUE_URL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,8 +98,11 @@ class MatkahuoltoApiClient:
 
         if "trackingEvents" not in payload and "parcelNumber" not in payload:
             # Neither the known "not found" shape nor a populated response —
-            # a route change the build plan says to stop and re-check, not
-            # to guess a shape for.
-            raise MatkahuoltoApiError("unrecognised response shape")
+            # the endpoint's contract may have changed, so this is reported
+            # rather than guessed at.
+            raise MatkahuoltoApiError(
+                "unrecognised response shape — please report this: "
+                f"{NEW_ISSUE_URL}"
+            )
 
         return payload

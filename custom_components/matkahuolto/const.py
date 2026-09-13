@@ -36,13 +36,12 @@ KNOWN_CAPABILITIES = frozenset(
 )
 
 # What the anonymous tracking endpoint actually populates, confirmed on a
-# real recipient-authorised parcel (see api/BUILD_PLAN.md's fixture gate):
+# real recipient-authorised parcel:
 # * no weight/dimensions field exists in the payload at all;
 # * no ETA/delivery-window field exists either — only ``storedUntil``, which
 #   is a pickup deadline, not an expected-delivery estimate;
 # * ``url`` is left unmapped: the tracker web client has no documented
-#   per-parcel deep-link query parameter, and guessing one is exactly the
-#   kind of invented mechanic the build plan forbids;
+#   per-parcel deep-link query parameter, and one is not guessed here;
 # * pickup-point name and the full event history both come back populated.
 CAPABILITIES = frozenset({"pickup_point", "history"})
 

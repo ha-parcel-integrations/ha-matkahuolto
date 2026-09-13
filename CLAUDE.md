@@ -59,18 +59,18 @@ The same constraint drives `raw_status`: it is **always** a short, generic
 label from `_STATUS_PATTERNS`, never the carrier's own sentence — `history`
 and the per-parcel `raw_status` are both suite-wide, aggregator-visible
 fields, and the carrier's free text is not fit to republish there. The full,
-unedited sentence is still visible under `raw` on the user's own instance
-(and redacted out of `diagnostics.py`'s public export via `TO_REDACT`), so
-nothing is destroyed — it's just never promoted past that one field.
+unedited sentence is still visible under `raw` on the user's own instance,
+so nothing is destroyed — it's just never promoted past that one field.
 
-`normalize_parcel` additionally strips `senderReference`/`officeCode`/
-`latitude`/`longitude` out of `raw` itself (not just diagnostics) — the build
-plan named those specifically as fields that must stay out of a *user-visible
-attribute*, a stronger bar than the diagnostics-only redaction every other
-carrier uses. `place` is left in `raw` untouched (it's a public pickup-point
-address, not personal data) but is genericised — shop name only, street
-dropped — before it becomes the canonical `pickup_point` field, via
-`_generic_place`.
+**`raw` is the API response completely untouched** — `normalize_parcel`
+does not strip anything out of it, including `senderReference` and each
+event's `officeCode`/`latitude`/`longitude`/`place`/`description`. It's the
+user's own data on their own instance. The only place any of this gets
+redacted is `diagnostics.py`'s `TO_REDACT` — a diagnostics dump is pasted
+into public issues, `raw` isn't. `place` is additionally genericised — shop
+name only, street dropped, via `_generic_place` — before it becomes the
+canonical `pickup_point` field; that trim is about what the canonical field
+shows, not about hiding anything from `raw`.
 
 Timestamps: the API's `date` (`DD.MM.YYYY`) + `time` (`HH:MM`) carry no
 offset and are local **Europe/Helsinki** wall-clock — `_parse_event_datetime`
@@ -119,9 +119,10 @@ not add one back in, even once the format is confirmed.
 There is no user-facing polling interval — this is a deliberate suite-wide
 choice, not a gap. `coordinator.py`'s `_hottest_tier_minutes` /
 `_next_update_interval` recompute `update_interval` at the end of every
-refresh. `matkahuolto/coordinator.py` is the canonical implementation
-every carrier mirrors; the design rationale (quiet window, tiers, stagger,
-backoff, delivered-skip) is spelled out below.
+refresh. The template's `example_carrier/coordinator.py` is the canonical
+implementation every carrier — including this one — mirrors; the design
+rationale (quiet window, tiers, stagger, backoff, delivered-skip) is
+spelled out below.
 
 - **Quiet window:** no polling 00:00–06:00 local time, except two daily
   anchors (~00:00 and ~06:00) for overnight / end-of-day catch-up.
@@ -162,7 +163,7 @@ repo's own `CLAUDE.md` — not a generator flag.
 |---|---|
 | `api.py` (HTTP client, error types) | **yes** |
 | `const.py` (domain, URLs, `ParcelStatus`, option keys) | partly (URLs) |
-| `parcels.py` (status map, `normalize_parcel`, history, sort, filters — pure, no I/O) | partly (`_STATUS_MAP`, `normalize_parcel`) |
+| `parcels.py` (status map, `normalize_parcel`, history, sort, filters — pure, no I/O) | partly (`_STATUS_PATTERNS`, `normalize_parcel`) |
 | `coordinator.py` (fetch, cache, event firing) | mostly not |
 | `config_flow.py` | partly (code validation) |
 | `sensor.py` / `button.py` / `calendar.py` / `device_trigger.py` | no |

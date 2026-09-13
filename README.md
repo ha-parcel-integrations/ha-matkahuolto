@@ -36,8 +36,7 @@ Part of the [ha-parcel-integrations](https://github.com/ha-parcel-integrations) 
 - Track any number of Matkahuolto parcels by tracking code — no account needed
 - Per-parcel sensor with the canonical status (`registered` / `in_transit` / `at_pickup_point` / `delivered` / `returning` / …) and a generic label for the carrier's own status text
 - Pickup-point name surfaced (without its precise street address) when a parcel is ready for collection
-- Summary sensors: incoming parcels, next delivery, recently delivered parcels
-- Read-only **Deliveries** calendar with the expected delivery windows
+- Summary sensors: incoming parcels, recently delivered parcels, parcels awaiting pickup
 - `matkahuolto.track_parcel` / `matkahuolto.untrack_parcel` services, so a dashboard button can add a parcel
 - Events + device triggers for no-code automations (parcel registered, status changed, delivered, delivery time changed)
 - Opt-in per-parcel status history
@@ -92,12 +91,14 @@ Standard HA removal applies: **Settings → Devices & Services → Matkahuolto �
 |---|---|
 | `sensor.matkahuolto_incoming_parcels` | Number of active tracked parcels, full list under the `parcels` attribute |
 | `sensor.matkahuolto_parcel_<code>` | One per tracked parcel; state is the canonical status, attributes carry the full normalised parcel |
-| `sensor.matkahuolto_next_delivery` | Earliest expected delivery moment across all active parcels |
+| `sensor.matkahuolto_next_delivery` | Always empty for this carrier — see note below |
 | `sensor.matkahuolto_awaiting_pickup` | Parcels ready for collection at a pickup point |
 | `sensor.matkahuolto_delivered_parcels` | Recently delivered parcels (see the retention option) |
 | `sensor.matkahuolto_last_successful_update` | Diagnostic: when Matkahuolto was last polled successfully |
 
 A delivered parcel moves from its per-parcel sensor to the delivered sensor automatically.
+
+**No expected-delivery date.** Matkahuolto's anonymous tracking endpoint never returns an ETA or delivery window — only a pickup deadline once a parcel reaches a pickup point (surfaced in `raw`, not as a canonical field). `sensor.matkahuolto_next_delivery` and the **Deliveries** calendar therefore exist (every carrier in the suite ships them) but stay permanently empty on this integration; they are not a sign anything is broken.
 
 ## Parcel status reference
 
@@ -123,7 +124,8 @@ The integration fires these on the event bus (also available as device triggers 
 | `matkahuolto_parcel_registered` | A new parcel appears in the active list |
 | `matkahuolto_parcel_status_changed` | A parcel's canonical status changes (`old_status` / `new_status` in the payload), except the final hop to delivered |
 | `matkahuolto_parcel_delivered` | A parcel is delivered |
-| `matkahuolto_parcel_delivery_time_changed` | The expected delivery window changes |
+
+`matkahuolto_parcel_delivery_time_changed` exists in the shared event contract but never fires on this carrier — there is no ETA field to change (see the Sensors note above).
 
 Every payload is the full normalised parcel plus the hub's `device_id`. Events are suppressed on the first refresh after start-up.
 

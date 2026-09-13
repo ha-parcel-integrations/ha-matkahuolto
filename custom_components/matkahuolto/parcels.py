@@ -11,13 +11,13 @@ read it. Two consequences drive most of this file:
 * Statuses are matched on stable **substrings** of that sentence, not an
   exact/closed set — see :data:`_STATUS_PATTERNS`.
 * Some of those sentences embed a named pickup point (a shop and its street
-  address) — location-identifying text a canonical field must not repeat
-  verbatim. ``raw_status`` therefore never carries the carrier's own
-  sentence; it carries a short, generic label per matched category instead
-  (see :data:`_STATUS_PATTERNS`' third column). The full, unedited sentence
-  stays available under ``raw`` for anyone who needs it directly from their
-  own Home Assistant instance — it is simply never promoted to a
-  suite-wide, aggregator-visible field.
+  address) — location-identifying text that has no business being echoed
+  into a suite-wide, aggregator-visible field. ``raw_status`` therefore
+  never carries the carrier's own sentence; it carries a short, generic
+  label per matched category instead (see :data:`_STATUS_PATTERNS`' third
+  column). The full, unedited sentence stays available under ``raw`` for
+  anyone who needs it directly from their own Home Assistant instance — it
+  is simply never promoted past that one field.
 """
 from __future__ import annotations
 
@@ -54,17 +54,22 @@ NEW_ISSUE_URL = (
 # statuses (returned, delivered) are checked first so a coincidental overlap
 # with an in-transit/registered phrase never wins by accident.
 #
-# Every row is confirmed either on the live-captured, redacted fixture in
-# tests/payloads.py (2026-09-13) or as an exact quoted sentence in the
-# research doc (the return-to-sender wording, seen on three
-# recipient-authorised parcels the same day, discarded after inspection).
-# Per the build plan, "only implement mappings present in the redacted
-# fixture" — nothing below is speculative.
+# Two known future risks to revisit only once actually observed (do not
+# pre-emptively reorder on a guess): a "delivered to pickup point X"-style
+# sentence would match "the consignment has been delivered" and terminate as
+# `delivered` ahead of the pickup-point rows below it; and "is on its way"
+# is generic enough that a future "on its way back to the sender" wording
+# could match `in_transit` before ever reaching `returning`.
+#
+# Every row is confirmed on a real, recipient-authorised parcel — either the
+# redacted fixture in tests/payloads.py (2026-09-13) or a description seen
+# live in production the same day. Nothing below is speculative or guessed
+# from a code list; nothing is added without a live sighting first.
 #
 # 2026-09-13: four sentences unmapped in production on real, recipient-
 # authorised parcels (drop-off-point and pickup-reminder/redirect wording
 # never seen in the original fixture capture) — added below with the same
-# confirmed-only bar, folded back into the research doc.
+# confirmed-only bar.
 _STATUS_PATTERNS: list[tuple[str, ParcelStatus, str]] = [
     ("returned it to the sender", ParcelStatus.RETURNING, "Returned to sender"),
     ("the consignment has been delivered", ParcelStatus.DELIVERED, "Delivered"),
@@ -215,10 +220,13 @@ def _generic_place(place: str | None) -> str | None:
 
     Matkahuolto's ``place`` field on a pickup-point event is
     ``"<shop name>, <street address>"`` (e.g. ``"Example Pickup Point,
-    Example Street 1"``). The shop name is the whole point of surfacing a
-    pickup point; the street address is exactly the "precise location" the
-    build plan says must not land in a user-visible attribute. Keep the part
-    before the first comma only.
+    Example Street 1"``). This only trims what the **canonical**
+    ``pickup_point`` field shows — the shop name is the whole point of
+    surfacing a pickup point, the street address is more precision than that
+    field needs. It does not hide anything: the full, untouched ``place``
+    stays under ``raw`` (see ``normalize_parcel``), and only the address
+    itself, not the fact that a pickup point exists, is trimmed here. Keep
+    the part before the first comma only.
     """
     if not place:
         return None
@@ -246,10 +254,10 @@ def build_history(
         timestamp = _to_iso_timestamp(event.get("date"), event.get("time"))
         if not timestamp:
             continue
-        _status, label = _match_status(event.get("description"))
+        status, label = _match_status(event.get("description"))
         entry = {
             "timestamp": timestamp,
-            "status": _status if _status is not ParcelStatus.UNKNOWN else None,
+            "status": status,
             "raw_status": label,
         }
         parseable.append((parse_iso(timestamp), entry))
@@ -268,12 +276,12 @@ def normalize_parcel(raw: dict, *, include_history: bool = False) -> dict:
     since the array is newest-first); a delivered parcel has ``delivered_at``
     set from that same event and no ETA to clear.
 
+    ``raw`` is the API response completely untouched — including
     ``senderReference`` and each event's ``officeCode``/``latitude``/
-    ``longitude`` are stripped out of ``raw`` before it is returned — the
-    build plan calls these out by name as fields that must stay out of
-    user-visible attributes, not just diagnostics (unlike ``place``, which is
-    genericised for ``pickup_point`` but left intact in ``raw`` since it is a
-    public pickup-point address, not personal data).
+    ``longitude``/``place``/``description``. It is the user's own data on
+    their own instance; nothing is stripped from it. What must not leave the
+    integration unredacted is ``diagnostics.py``'s public export
+    (``TO_REDACT``), not this field.
     """
     events = raw.get("trackingEvents") or []
     latest = events[0] if isinstance(events, list) and events else {}
@@ -305,29 +313,8 @@ def normalize_parcel(raw: dict, *, include_history: bool = False) -> dict:
         "weight": None,
         "dimensions": None,
         "history": build_history(events) if include_history else None,
-        "raw": _sanitize_raw(raw),
+        "raw": raw,
     }
-
-
-def _sanitize_raw(raw: dict) -> dict:
-    """Return a copy of the raw payload with reference/coordinate fields dropped.
-
-    ``senderReference`` (top level) and ``officeCode``/``latitude``/
-    ``longitude`` (per event) are the fields the build plan singles out as
-    ones that must not reach a user-visible attribute at all, not just
-    diagnostics — see the ``normalize_parcel`` docstring.
-    """
-    sanitized = dict(raw)
-    sanitized.pop("senderReference", None)
-    events = sanitized.get("trackingEvents")
-    if isinstance(events, list):
-        sanitized["trackingEvents"] = [
-            {k: v for k, v in event.items() if k not in ("officeCode", "latitude", "longitude")}
-            if isinstance(event, dict)
-            else event
-            for event in events
-        ]
-    return sanitized
 
 
 def sort_parcels_by_ts(

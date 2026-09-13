@@ -1,15 +1,14 @@
 """Sample Matkahuolto API payloads shared by the test modules.
 
 ``DELIVERED_SAMPLE`` is a **redacted, real captured response** — one paced,
-recipient-authorised ``GET /search/trackingInfo`` per the build plan's
-fixture gate (2026-09-13). The tracking code, sender reference, precise
-pickup-point address and GPS coordinates have all been replaced with generic
-placeholders per that gate's redaction rules; every status description,
+recipient-authorised ``GET /search/trackingInfo`` (2026-09-13). The tracking
+code, sender reference, precise pickup-point address and GPS coordinates
+have all been replaced with generic placeholders; every status description,
 field name, event ordering (newest-first) and date/time format is otherwise
 unedited.
 
 The other samples are synthetic variants built from the same confirmed field
-shapes and status vocabulary (see the research doc), covering the
+shapes and status vocabulary, covering the
 `registered`/`in_transit`/`at_pickup_point`/`returning` categories the single
 captured parcel (a `delivered` one) does not itself exercise.
 """

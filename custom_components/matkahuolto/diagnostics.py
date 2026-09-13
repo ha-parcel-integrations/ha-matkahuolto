@@ -12,14 +12,14 @@ from . import MatkahuoltoConfigEntry
 # identifies a person, an address or a specific parcel. Over-redacting is
 # cheap; under-redacting leaks a user's home address into a GitHub thread.
 #
-# ``normalize_parcel`` already strips ``senderReference``/``officeCode``/
-# ``latitude``/``longitude`` out of ``raw`` before it ever reaches here (the
-# build plan calls those out as fields that must stay out of user-visible
-# attributes, not just diagnostics — see parcels.py). ``place`` and
-# ``description`` are kept in ``raw`` there (a pickup point's own public
-# address, not personal data) but are still redacted wholesale here, since a
-# diagnostics dump is shared publicly rather than viewed on the user's own
-# instance.
+# ``raw`` (in ``incoming``/``delivered`` below) carries the API response
+# completely untouched — that's fine for the user's own instance, but every
+# field that can identify a person, an address or a specific parcel must be
+# caught here before a diagnostics dump is shared publicly. ``description``
+# and ``place`` routinely embed a pickup point's name and street address;
+# ``senderReference``/``officeCode``/``latitude``/``longitude`` are
+# per-event reference/coordinate fields with no reason to leave the
+# integration unredacted.
 TO_REDACT = {
     # canonical fields we publish ourselves
     "tracking_code",

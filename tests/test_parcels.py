@@ -154,7 +154,8 @@ def test_parse_iso_handles_z_naive_and_garbage():
 
 def test_finnish_local_datetime_is_not_treated_as_utc():
     """DD.MM.YYYY + HH:MM carries no offset and must localise to Helsinki,
-    never UTC — the exact trap the build plan calls out."""
+    never UTC — a naive UTC parse would silently shift every timestamp by
+    the local offset."""
     parcel = normalize_parcel(DELIVERED_SAMPLE)
     delivered_at = parse_iso(parcel["delivered_at"])
     assert delivered_at is not None
@@ -204,11 +205,14 @@ def test_build_history_handles_missing_and_malformed():
     assert build_history(["not-a-dict"]) == []
 
 
-def test_build_history_unmapped_event_keeps_null_status():
+def test_build_history_unmapped_event_falls_back_to_unknown():
+    """The canonical contract has no null status — unmapped falls back to
+    ``unknown``, same as the top-level ``status`` field. ``raw_status`` stays
+    ``None`` regardless (the PII decision, untouched by this)."""
     history = build_history(
         [{"date": "01.02.2026", "time": "09:00", "description": "Never seen before."}]
     )
-    assert history[0]["status"] is None
+    assert history[0]["status"] == ParcelStatus.UNKNOWN
     assert history[0]["raw_status"] is None
 
 
@@ -377,16 +381,17 @@ def test_normalize_keeps_the_original_payload_structure_under_raw():
     assert len(parcel["raw"]["trackingEvents"]) == len(DELIVERED_SAMPLE["trackingEvents"])
 
 
-def test_normalize_strips_reference_and_coordinate_fields_from_raw():
-    """senderReference/officeCode/latitude/longitude must not reach a
-    user-visible attribute at all — the build plan calls these out by name,
-    stronger than the usual diagnostics-only redaction."""
+def test_normalize_keeps_reference_and_coordinate_fields_in_raw():
+    """``raw`` is the API response untouched — senderReference/officeCode/
+    latitude/longitude are not stripped here. Redaction happens only in
+    diagnostics.py's public export (see test_diagnostics.py)."""
     parcel = normalize_parcel(DELIVERED_SAMPLE)
-    assert "senderReference" not in parcel["raw"]
-    for event in parcel["raw"]["trackingEvents"]:
-        assert "officeCode" not in event
-        assert "latitude" not in event
-        assert "longitude" not in event
+    assert parcel["raw"] is DELIVERED_SAMPLE
+    assert "senderReference" in parcel["raw"]
+    assert any(
+        "officeCode" in event and ("latitude" in event and "longitude" in event)
+        for event in parcel["raw"]["trackingEvents"]
+    )
 
 
 def test_normalize_does_not_mutate_the_input():
