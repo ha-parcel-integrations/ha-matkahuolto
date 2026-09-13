@@ -40,10 +40,10 @@ KNOWN_CAPABILITIES = frozenset(
 # * no weight/dimensions field exists in the payload at all;
 # * no ETA/delivery-window field exists either — only ``storedUntil``, which
 #   is a pickup deadline, not an expected-delivery estimate;
-# * ``url`` is left unmapped: the tracker web client has no documented
-#   per-parcel deep-link query parameter, and one is not guessed here;
-# * pickup-point name and the full event history both come back populated.
-CAPABILITIES = frozenset({"pickup_point", "history"})
+# * pickup-point name and the full event history both come back populated;
+# * ``url`` is built locally from the tracking code — the web tracker takes
+#   a ``parcelNumber`` query parameter and opens straight on that parcel.
+CAPABILITIES = frozenset({"pickup_point", "url", "history"})
 
 # Anonymous, keyless tracking endpoint — the same one the official web
 # tracker (https://www.matkahuolto.fi/seuranta) calls. Confirmed live on
@@ -51,6 +51,7 @@ CAPABILITIES = frozenset({"pickup_point", "history"})
 # anti-bot challenge involved; the endpoint answers a bounded fictional
 # number with ``{"notFound": true}`` and HTTP 200 rather than a 404.
 TRACKING_API_URL = "https://wwwservice.matkahuolto.fi/search/trackingInfo"
+TRACKING_URL = "https://www.matkahuolto.fi/seuranta?parcelNumber={tracking_code}"
 
 # Tracked parcels live in the config entry options as a list of
 # ``{tracking_code}`` dicts — this carrier has no account or parcel feed, so the

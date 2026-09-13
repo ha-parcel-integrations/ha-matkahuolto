@@ -34,6 +34,7 @@ from .const import (
     DEFAULT_DELIVERED_FILTER_TYPE,
     EVENT_TIMEZONE,
     HISTORY_MAX_EVENTS,
+    TRACKING_URL,
     ParcelStatus,
 )
 
@@ -266,6 +267,13 @@ def build_history(
     return ordered[-max_events:]
 
 
+def tracking_url(tracking_code: str | None) -> str | None:
+    """Construct the consumer tracking deep-link for a parcel."""
+    if not tracking_code:
+        return None
+    return TRACKING_URL.format(tracking_code=tracking_code)
+
+
 def normalize_parcel(raw: dict, *, include_history: bool = False) -> dict:
     """Return a carrier-agnostic parcel dict with the payload under ``raw``.
 
@@ -296,9 +304,11 @@ def normalize_parcel(raw: dict, *, include_history: bool = False) -> dict:
     if status is ParcelStatus.AT_PICKUP_POINT and isinstance(latest, dict):
         pickup_point = _generic_place(latest.get("place"))
 
+    barcode = raw.get("parcelNumber")
+
     return {
         "carrier": "Matkahuolto",
-        "barcode": raw.get("parcelNumber"),
+        "barcode": barcode,
         "sender": None,
         "receiver": None,
         "status": status,
@@ -309,7 +319,7 @@ def normalize_parcel(raw: dict, *, include_history: bool = False) -> dict:
         "planned_to": None,
         "pickup": status is ParcelStatus.AT_PICKUP_POINT,
         "pickup_point": pickup_point,
-        "url": None,
+        "url": tracking_url(barcode),
         "weight": None,
         "dimensions": None,
         "history": build_history(events) if include_history else None,

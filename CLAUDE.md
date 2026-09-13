@@ -79,11 +79,13 @@ localises explicitly via `zoneinfo`, never treats them as UTC.
 oldest-first like every other carrier's `history`.
 
 There is no weight, dimensions or ETA/delivery-window field anywhere in the
-anonymous payload, and no confirmed per-parcel deep-link URL format — all
-three stay `None` (`const.py`'s `CAPABILITIES` is `{"pickup_point",
-"history"}` only). `out_for_delivery`, `problem` and a cancellation status
-exist in the shared `ParcelStatus` enum but have never been observed on this
-carrier; do not invent a mapping for them.
+anonymous payload — those stay `None`. `url` is not from the payload either:
+it is built locally from the tracking code, because the web tracker accepts
+`?parcelNumber=<code>` and opens straight on that parcel (`const.py`'s
+`CAPABILITIES` is `{"pickup_point", "url", "history"}`).
+`out_for_delivery`, `problem` and a cancellation status exist in the shared
+`ParcelStatus` enum but have never been observed on this carrier; do not
+invent a mapping for them.
 
 API mechanics — endpoint shape, the confirmed field set, the exact status
 sentences seen live — live in the private `carrier-research/matkahuolto/api/`,

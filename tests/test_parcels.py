@@ -24,6 +24,7 @@ from custom_components.matkahuolto.parcels import (
     normalize_parcel,
     parse_iso,
     sort_parcels_by_ts,
+    tracking_url,
 )
 
 from .payloads import (
@@ -300,10 +301,16 @@ def test_normalize_delivered_parcel():
     # arrived (Matkahuolto's anonymous payload has no ETA field at all).
     assert parcel["planned_from"] is None
     assert parcel["planned_to"] is None
-    assert parcel["url"] is None
+    assert parcel["url"] == "https://www.matkahuolto.fi/seuranta?parcelNumber=TEST_CODE"
     assert parcel["weight"] is None
     assert parcel["dimensions"] is None
     assert parcel["history"] is None  # opt-in, default off
+
+
+def test_tracking_url_needs_a_code():
+    """A payload without a parcel number must not produce a dead deep-link."""
+    assert tracking_url(None) is None
+    assert normalize_parcel({})["url"] is None
 
 
 def test_normalize_history_is_opt_in():
