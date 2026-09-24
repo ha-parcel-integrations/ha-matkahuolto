@@ -130,7 +130,7 @@
         "name": "Seuraava toimitus"
       },
       "awaiting_pickup": {
-        "name": "Noudettavissa",
+        "name": "Valmis noudettavaksi",
         "unit_of_measurement": "pakettia"
       },
       "delivered_parcels": {
