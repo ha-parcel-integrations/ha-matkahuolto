@@ -108,6 +108,7 @@ decisions. Changes apply without a restart. Two models, **do not mix them**:
 
 ## Tracking-code validation
 
+In code-based carriers (account-based sources have no code entry),
 `valid_tracking_code` in `config_flow.py` accepts every non-empty code — no
 format regex. This is a suite-wide convention, not a per-carrier TODO: real
 tracking-number formats vary too much across carriers, and are often not
@@ -153,7 +154,8 @@ spelled out below.
   cached payload, and still shows under the retention window — it just costs
   no more requests. `coordinator.delivered_codes` surfaces the count in
   diagnostics. Account-based carriers have nothing to skip here — one account
-  call already returns everything, so their `delivered_codes` is always empty.
+  call already returns everything, so they either have no `delivered_codes` or
+  it is always empty.
 
 A carrier that genuinely throttles or soft-bans traffic harder than the 429
 backoff handles is a documented, local divergence from this in that one
@@ -163,7 +165,7 @@ repo's own `CLAUDE.md` — not a generator flag.
 
 | File | Carrier-specific? |
 |---|---|
-| `api.py` (HTTP client, error types) | **yes** |
+| `api.py` (HTTP client, error types; `account/` and `tracking/` packages instead when a repo has two sources) | **yes** |
 | `const.py` (domain, URLs, `ParcelStatus`, option keys) | partly (URLs) |
 | `parcels.py` (status map, `normalize_parcel`, history, sort, filters — pure, no I/O) | partly (`_STATUS_PATTERNS`, `normalize_parcel`) |
 | `coordinator.py` (fetch, cache, event firing) | mostly not |
