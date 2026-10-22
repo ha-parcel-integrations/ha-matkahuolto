@@ -12,6 +12,7 @@ shapes and status vocabulary, covering the
 `registered`/`in_transit`/`at_pickup_point`/`returning` categories the single
 captured parcel (a `delivered` one) does not itself exercise.
 """
+
 from __future__ import annotations
 
 TEST_CODE = "TEST_CODE"

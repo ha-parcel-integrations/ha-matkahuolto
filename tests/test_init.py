@@ -1,4 +1,5 @@
 """Tests for Matkahuolto setup and unload."""
+
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.config_entries import ConfigEntryState
@@ -6,11 +7,7 @@ from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.matkahuolto.api import MatkahuoltoApiError
-from custom_components.matkahuolto.const import (
-    CONF_PARCELS,
-    CONF_TRACKING_CODE,
-    DOMAIN,
-)
+from custom_components.matkahuolto.const import CONF_PARCELS, CONF_TRACKING_CODE, DOMAIN
 
 from .payloads import in_transit_sample as _sample
 
@@ -84,7 +81,10 @@ async def test_per_parcel_sensor_spawn_and_remove(hass):
     entry.add_to_hass(hass)
 
     mock = AsyncMock(return_value=_sample(ACTIVE_CODE))
-    with patch("custom_components.matkahuolto.api.MatkahuoltoApiClient.async_get_parcel", new=mock):
+    with patch(
+        "custom_components.matkahuolto.api.MatkahuoltoApiClient.async_get_parcel",
+        new=mock,
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -120,7 +120,10 @@ async def test_options_update_applies_live_without_reload(hass):
     entry.add_to_hass(hass)
 
     mock = AsyncMock(return_value=_sample(ACTIVE_CODE))
-    with patch("custom_components.matkahuolto.api.MatkahuoltoApiClient.async_get_parcel", new=mock):
+    with patch(
+        "custom_components.matkahuolto.api.MatkahuoltoApiClient.async_get_parcel",
+        new=mock,
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 

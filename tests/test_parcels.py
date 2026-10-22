@@ -4,7 +4,9 @@ These need no Home Assistant instance — the whole point of keeping
 ``parcels.py`` free of I/O is that the carrier-specific mapping (the part you
 rewrite per carrier) can be tested as plain functions.
 """
-from datetime import datetime, timedelta, timezone
+
+import copy
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -42,7 +44,7 @@ from .payloads import (
 
 
 @pytest.mark.parametrize(
-    "description,expected",
+    ("description", "expected"),
     [
         (
             "Matkahuolto is waiting for the consignment from the sender.",
@@ -111,15 +113,20 @@ def test_map_parcel_status_missing_is_unknown():
 
 
 def test_map_parcel_status_unmapped_is_unknown():
-    assert map_parcel_status("Something never described before.") == ParcelStatus.UNKNOWN
+    assert (
+        map_parcel_status("Something never described before.") == ParcelStatus.UNKNOWN
+    )
 
 
 def test_status_matching_is_case_insensitive():
-    assert map_parcel_status("THE CONSIGNMENT HAS BEEN DELIVERED.") == ParcelStatus.DELIVERED
+    assert (
+        map_parcel_status("THE CONSIGNMENT HAS BEEN DELIVERED.")
+        == ParcelStatus.DELIVERED
+    )
 
 
 def test_returning_wins_over_delivered_band_ordering_trap():
-    """"we returned it to the sender" must not be swallowed by a delivered match."""
+    """ "we returned it to the sender" must not be swallowed by a delivered match."""
     assert (
         map_parcel_status(
             "As the consignment was not picked up on time, we returned it to "
@@ -148,7 +155,7 @@ def test_unmapped_status_warns_only_once_without_leaking_the_text(caplog):
 def test_parse_iso_handles_z_naive_and_garbage():
     assert parse_iso("2026-04-29T13:12:42Z").tzinfo is not None
     # A naive value is assumed UTC so mixed lists still sort.
-    assert parse_iso("2026-04-29T13:12:42").tzinfo == timezone.utc
+    assert parse_iso("2026-04-29T13:12:42").tzinfo == UTC
     assert parse_iso("not-a-date") is None
     assert parse_iso(None) is None
 
@@ -163,8 +170,8 @@ def test_finnish_local_datetime_is_not_treated_as_utc():
     # Helsinki is UTC+2 in January (EET, no DST) — a UTC timestamp would
     # carry a +00:00 offset instead.
     assert delivered_at.utcoffset() == timedelta(hours=2)
-    assert delivered_at.astimezone(timezone.utc).hour == 12  # 14:41 EET -> 12:41 UTC
-    assert delivered_at.astimezone(timezone.utc).minute == 41
+    assert delivered_at.astimezone(UTC).hour == 12  # 14:41 EET -> 12:41 UTC
+    assert delivered_at.astimezone(UTC).minute == 41
 
 
 # ---------------------------------------------------------------------------
@@ -194,7 +201,11 @@ def test_build_history_never_echoes_the_raw_description():
 
 def test_build_history_caps_to_max_events():
     events = [
-        {"date": f"{day:02d}.01.2026", "time": "10:00", "description": "The consignment is on its way"}
+        {
+            "date": f"{day:02d}.01.2026",
+            "time": "10:00",
+            "description": "The consignment is on its way",
+        }
         for day in range(1, 26)
     ]
     assert len(build_history(events, max_events=20)) == 20
@@ -263,7 +274,9 @@ def test_capabilities_match_what_normalize_parcel_actually_returns():
     if "dimensions" in CAPABILITIES:
         assert delivered["dimensions"] is not None
     if "delivery_window" in CAPABILITIES:
-        assert delivered["planned_from"] is not None or delivered["planned_to"] is not None
+        assert (
+            delivered["planned_from"] is not None or delivered["planned_to"] is not None
+        )
     if "pickup_point" in CAPABILITIES:
         assert pickup["pickup_point"] is not None
     if "url" in CAPABILITIES:
@@ -385,7 +398,9 @@ def test_normalize_null_and_missing_event_fields_do_not_crash():
 def test_normalize_keeps_the_original_payload_structure_under_raw():
     parcel = normalize_parcel(DELIVERED_SAMPLE)
     assert parcel["raw"]["parcelNumber"] == "TEST_CODE"
-    assert len(parcel["raw"]["trackingEvents"]) == len(DELIVERED_SAMPLE["trackingEvents"])
+    assert len(parcel["raw"]["trackingEvents"]) == len(
+        DELIVERED_SAMPLE["trackingEvents"]
+    )
 
 
 def test_normalize_keeps_reference_and_coordinate_fields_in_raw():
@@ -403,8 +418,6 @@ def test_normalize_keeps_reference_and_coordinate_fields_in_raw():
 
 def test_normalize_does_not_mutate_the_input():
     raw = at_pickup_point_sample()
-    import copy
-
     original = copy.deepcopy(raw)
     normalize_parcel(raw)
     assert raw == original
@@ -455,7 +468,7 @@ def _entry(filter_type: str, amount: int) -> MockConfigEntry:
 
 
 def _delivered_pair() -> list[dict]:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     return [
         {"barcode": "RECENT", "delivered_at": (now - timedelta(days=1)).isoformat()},
         {"barcode": "OLD", "delivered_at": (now - timedelta(days=30)).isoformat()},

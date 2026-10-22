@@ -19,10 +19,11 @@ read it. Two consequences drive most of this file:
   anyone who needs it directly from their own Home Assistant instance — it
   is simply never promoted past that one field.
 """
+
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 import logging
-from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from homeassistant.config_entries import ConfigEntry
@@ -176,7 +177,9 @@ def map_parcel_status(description: str | None) -> ParcelStatus:
     return status
 
 
-def _parse_event_datetime(date_str: str | None, time_str: str | None) -> datetime | None:
+def _parse_event_datetime(
+    date_str: str | None, time_str: str | None
+) -> datetime | None:
     """Combine Matkahuolto's ``date``/``time`` fields into an aware datetime.
 
     ``date`` is ``DD.MM.YYYY`` and ``time`` is ``HH:MM``, both local Finnish
@@ -208,11 +211,11 @@ def parse_iso(value: str | None) -> datetime | None:
     if not value:
         return None
     try:
-        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        parsed = datetime.fromisoformat(str(value))
     except ValueError:
         return None
     if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=timezone.utc)
+        parsed = parsed.replace(tzinfo=UTC)
     return parsed
 
 
@@ -293,7 +296,9 @@ def normalize_parcel(raw: dict, *, include_history: bool = False) -> dict:
     """
     events = raw.get("trackingEvents") or []
     latest = events[0] if isinstance(events, list) and events else {}
-    status, _label = _match_status(latest.get("description") if isinstance(latest, dict) else None)
+    status, _label = _match_status(
+        latest.get("description") if isinstance(latest, dict) else None
+    )
     delivered = status is ParcelStatus.DELIVERED
 
     delivered_at = None
@@ -358,14 +363,12 @@ def apply_delivered_filter(parcels: list[dict], entry: ConfigEntry) -> list[dict
     shows.
     """
     options = entry.options
-    filter_type = options.get(
-        CONF_DELIVERED_FILTER_TYPE, DEFAULT_DELIVERED_FILTER_TYPE
-    )
+    filter_type = options.get(CONF_DELIVERED_FILTER_TYPE, DEFAULT_DELIVERED_FILTER_TYPE)
     amount = int(
         options.get(CONF_DELIVERED_FILTER_AMOUNT, DEFAULT_DELIVERED_FILTER_AMOUNT)
     )
     if filter_type == "days":
-        cutoff = datetime.now(timezone.utc) - timedelta(days=amount)
+        cutoff = datetime.now(UTC) - timedelta(days=amount)
         return [
             parcel
             for parcel in parcels

@@ -1,14 +1,12 @@
 """Tests for the Matkahuolto API client."""
+
 import json
 from unittest.mock import AsyncMock, MagicMock
 
 import aiohttp
 import pytest
 
-from custom_components.matkahuolto.api import (
-    MatkahuoltoApiClient,
-    MatkahuoltoApiError,
-)
+from custom_components.matkahuolto.api import MatkahuoltoApiClient, MatkahuoltoApiError
 from custom_components.matkahuolto.const import TRACKING_API_URL
 
 from .payloads import NOT_FOUND_SAMPLE, TEST_CODE, registered_sample
@@ -16,7 +14,9 @@ from .payloads import NOT_FOUND_SAMPLE, TEST_CODE, registered_sample
 CODE = TEST_CODE
 
 
-def _session_returning(status: int, body: object = None, headers: dict | None = None) -> MagicMock:
+def _session_returning(
+    status: int, body: object = None, headers: dict | None = None
+) -> MagicMock:
     response = AsyncMock()
     response.status = status
     response.headers = headers or {}

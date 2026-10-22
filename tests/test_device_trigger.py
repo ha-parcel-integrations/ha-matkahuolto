@@ -1,4 +1,5 @@
 """Tests for Matkahuolto device triggers."""
+
 from custom_components.matkahuolto.const import DOMAIN
 from custom_components.matkahuolto.device_trigger import (
     TRIGGER_EVENTS,

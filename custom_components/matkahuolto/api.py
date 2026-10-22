@@ -6,6 +6,7 @@ web tracker calls. Confirmed live on a recipient-authorised parcel
 not-yet-visible code answers ``{"notFound": true}`` with **HTTP 200**, not a
 404 — that response shape is a normal "not found" state, never an error.
 """
+
 from __future__ import annotations
 
 import logging
@@ -71,7 +72,9 @@ class MatkahuoltoApiClient:
                 # fetch failure.
                 retry_after_header = response.headers.get("Retry-After")
                 try:
-                    retry_after = float(retry_after_header) if retry_after_header else None
+                    retry_after = (
+                        float(retry_after_header) if retry_after_header else None
+                    )
                 except ValueError:
                     retry_after = None  # an HTTP-date, not seconds; the caller's own backoff handles it
                 raise MatkahuoltoApiError(
@@ -101,8 +104,7 @@ class MatkahuoltoApiClient:
             # the endpoint's contract may have changed, so this is reported
             # rather than guessed at.
             raise MatkahuoltoApiError(
-                "unrecognised response shape — please report this: "
-                f"{NEW_ISSUE_URL}"
+                f"unrecognised response shape — please report this: {NEW_ISSUE_URL}"
             )
 
         return payload

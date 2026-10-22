@@ -1,4 +1,5 @@
 """Tests for the Matkahuolto refresh button."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 from custom_components.matkahuolto.button import MatkahuoltoRefreshButton
