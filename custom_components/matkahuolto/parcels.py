@@ -264,7 +264,10 @@ def build_history(
             "status": status,
             "raw_status": label,
         }
-        parseable.append((parse_iso(timestamp), entry))
+        parsed = parse_iso(timestamp)
+        if parsed is None:
+            continue
+        parseable.append((parsed, entry))
     parseable.sort(key=lambda item: item[0])
     ordered = [entry for _, entry in parseable]
     return ordered[-max_events:]
