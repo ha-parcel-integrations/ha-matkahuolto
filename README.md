@@ -118,6 +118,7 @@ Standard HA removal applies: **Settings → Devices & Services → Matkahuolto �
 | `sensor.matkahuolto_next_delivery` | Always empty for this carrier — see note below |
 | `sensor.matkahuolto_awaiting_pickup` | Parcels ready for collection at a pickup point |
 | `sensor.matkahuolto_delivered_parcels` | Recently delivered parcels (see the retention option) |
+| `calendar.matkahuolto_deliveries` | Read-only calendar of expected deliveries, no extra API calls |
 | `sensor.matkahuolto_last_successful_update` | Diagnostic: when Matkahuolto was last polled successfully |
 
 A delivered parcel moves from its per-parcel sensor to the delivered sensor automatically.
