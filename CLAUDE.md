@@ -35,10 +35,12 @@ you act in one of these areas:
   summary+diagnostic sensors. Add a new non-parcel sensor's unique_id to the set.
 - **Per-parcel sensors are removed by the summary sensor** via
   `entity_registry.async_remove` (self-removal races and leaves ghosts).
-- This carrier reaches `ParcelStatus.AT_PICKUP_POINT` from a confirmed real
-  description, so it ships `sensor.matkahuolto_awaiting_pickup` — see
-  *Parcel contract* in `CONVENTIONS.md`. Say "pickup point", not
-  "ServicePoint"/"parcel shop"/"locker", for the generic concept.
+- This carrier delivers to pickup points, so it ships both
+  `sensor.matkahuolto_awaiting_pickup` and
+  `sensor.matkahuolto_en_route_to_pickup_point` — see *Parcel contract* in
+  `CONVENTIONS.md`. Both unique_ids are in the setup's non-parcel set. Say
+  "pickup point", not "ServicePoint"/"parcel shop"/"locker", for the generic
+  concept.
 
 ## Carrier-specific notes
 
@@ -90,6 +92,20 @@ invent a mapping for them.
 API mechanics — endpoint shape, the confirmed field set, the exact status
 sentences seen live — live in the private `carrier-research/matkahuolto/api/`,
 not here.
+
+**Parcel contract notes.** The window/pickup helpers in `parcels.py`
+(`planned_window`, `planned_for_status`, `is_pickup`, …) are shared verbatim
+across the suite; never edit them. The payload has no ETA, so `planned_*` is
+always `None`. `pickup` is true once any event mapped to `at_pickup_point`
+(sticky after collection or return); there is no structured route field read,
+so `en_route_to_pickup_point` only fills for a parcel that was at a pickup
+point earlier and moved on again (for example a redirect), and reads 0 until
+a real parcel shows that. `pickup_point` is the shop name from the newest
+`at_pickup_point` event that carries an `officeCode`; the arrival-message
+event only names the town, so it is skipped and the point stays `None` if no
+such event exists. `delivered_at` is the timestamp of the newest event when it
+is the delivery sentence. Whether that sentence can ever mean "dropped at the
+point" rather than "collected" is unconfirmed and needs a real parcel.
 
 ## Options and reloads
 

@@ -36,7 +36,7 @@ A custom Home Assistant integration that tracks your [Matkahuolto](https://www.m
 - Track any number of Matkahuolto parcels by tracking code — no account needed
 - Per-parcel sensor with the canonical status (`registered` / `in_transit` / `at_pickup_point` / `delivered` / `returning` / …) and a generic label for the carrier's own status text
 - Pickup-point name surfaced (without its precise street address) when a parcel is ready for collection
-- Summary sensors: incoming parcels, recently delivered parcels, parcels awaiting pickup
+- Summary sensors: incoming parcels, recently delivered parcels, parcels on their way to a pickup point, parcels awaiting pickup
 - `matkahuolto.track_parcel` / `matkahuolto.untrack_parcel` services, so a dashboard button can add a parcel
 - Events + device triggers for no-code automations (parcel registered, status changed, delivered, delivery time changed)
 - Opt-in per-parcel status history
@@ -116,6 +116,7 @@ Standard HA removal applies: **Settings → Devices & Services → Matkahuolto �
 | `sensor.matkahuolto_incoming_parcels` | Number of active tracked parcels, full list under the `parcels` attribute |
 | `sensor.matkahuolto_parcel_<code>` | One per tracked parcel; state is the canonical status, attributes carry the full normalised parcel |
 | `sensor.matkahuolto_next_delivery` | Always empty for this carrier — see note below |
+| `sensor.matkahuolto_en_route_to_pickup_point` | Incoming parcels on their way to a pickup point that have not arrived yet (stays 0 until a parcel has been seen at a pickup point) |
 | `sensor.matkahuolto_awaiting_pickup` | Parcels ready for collection at a pickup point |
 | `sensor.matkahuolto_delivered_parcels` | Recently delivered parcels (see the retention option) |
 | `calendar.matkahuolto_deliveries` | Read-only calendar of expected deliveries, no extra API calls |
