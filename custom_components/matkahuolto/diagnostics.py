@@ -27,6 +27,7 @@ TO_REDACT = {
     "barcode",
     "sender",
     "receiver",
+    "contents",
     "url",
     "pickup_point",
     # Matkahuolto payload fields

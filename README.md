@@ -38,6 +38,7 @@ A custom Home Assistant integration that tracks your [Matkahuolto](https://www.m
 - Pickup-point name surfaced (without its precise street address) when a parcel is ready for collection
 - Summary sensors: incoming parcels, recently delivered parcels, parcels on their way to a pickup point, parcels awaiting pickup
 - `matkahuolto.track_parcel` / `matkahuolto.untrack_parcel` services, so a dashboard button can add a parcel
+- A `contents` field on every parcel, set in your own words with the `matkahuolto.update_contents` service or the `contents` field of `matkahuolto.track_parcel`; it titles the calendar event and shows on the next-delivery sensor
 - Events + device triggers for no-code automations (parcel registered, status changed, delivered, delivery time changed)
 - Opt-in per-parcel status history
 - Manual refresh button and a diagnostic last-update sensor
@@ -159,8 +160,11 @@ Every payload is the full normalised parcel plus the hub's `device_id`. Events a
 
 | Service | Fields | Description |
 |---|---|---|
-| `matkahuolto.track_parcel` | `tracking_code` | Start tracking a parcel |
+| `matkahuolto.track_parcel` | `tracking_code`, `contents` (optional) | Start tracking a parcel, optionally noting what is in it |
 | `matkahuolto.untrack_parcel` | `tracking_code` | Stop tracking a parcel |
+| `matkahuolto.update_contents` | `tracking_code`, `contents` (optional) | Set, replace or clear (empty text) a note on what is in a parcel, tracked or not |
+
+The `contents` text is stored locally, never sent to Matkahuolto, and fills the parcel's `contents` field; it titles the parcel's calendar event and shows on the next-delivery sensor (both stay empty on this carrier, see the Sensors note above).
 
 ## Examples
 
